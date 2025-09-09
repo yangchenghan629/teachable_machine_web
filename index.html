@@ -92,75 +92,77 @@ input[type="file"]:hover { background: #3a74e8; }
         <h3>利用Teachable Machine製作影像辨識模型</h3>
         <p id="author-name" style="font-size: larger;">姓名: 楊承翰&emsp;學號: B13209015&emsp;系級: 大氣二</p>
   </header>
+  <main id="'content">
+    <input type="file" id="image-upload" accept="image/*">
+    <div>
+        <img id="image-preview" src="" alt="Uploaded Image">
+    </div>
+    <div id="label-container"></div>
 
-<input type="file" id="image-upload" accept="image/*">
-<div>
-    <img id="image-preview" src="" alt="Uploaded Image">
-</div>
-<div id="label-container"></div>
+    <script>
+    const URL = "./model/";
+    let model, maxPredictions;
 
-<script>
-const URL = "./model/";
-let model, maxPredictions;
-
-async function loadModel() {
-    const modelURL = URL + "model.json";
-    const metadataURL = URL + "metadata.json";
-    model = await tmImage.load(modelURL, metadataURL);
-    maxPredictions = model.getTotalClasses();
-}
-
-async function predictImage(image) {
-    const prediction = await model.predict(image);
-    const labelContainer = document.getElementById("label-container");
-    labelContainer.innerHTML = "";
-
-    prediction.forEach((pred, index) => {
-        const container = document.createElement("div");
-        container.classList.add("label-bar");
-
-        const labelText = document.createElement("div");
-        labelText.classList.add("label-text");
-        labelText.textContent = `${pred.className} (${(pred.probability*100).toFixed(1)}%)`;
-
-        const barContainer = document.createElement("div");
-        barContainer.classList.add("bar-container");
-
-        const bar = document.createElement("div");
-        bar.classList.add("bar");
-
-        barContainer.appendChild(bar);
-        container.appendChild(labelText);
-        container.appendChild(barContainer);
-        labelContainer.appendChild(container);
-
-        // 延遲動畫
-        setTimeout(() => {
-            bar.style.width = `${pred.probability*100}%`;
-        }, index * 150);
-    });
-}
-
-document.getElementById("image-upload").addEventListener("change", function(event){
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const img = document.getElementById("image-preview");
-        img.src = e.target.result;
-        img.classList.remove("uploaded");
-        setTimeout(() => img.classList.add("uploaded"), 50);
-
-        img.onload = function() {
-            predictImage(img);
-        }
+    async function loadModel() {
+        const modelURL = URL + "model.json";
+        const metadataURL = URL + "metadata.json";
+        model = await tmImage.load(modelURL, metadataURL);
+        maxPredictions = model.getTotalClasses();
     }
-    reader.readAsDataURL(file);
-});
 
-loadModel();
-</script>
+    async function predictImage(image) {
+        const prediction = await model.predict(image);
+        const labelContainer = document.getElementById("label-container");
+        labelContainer.innerHTML = "";
+
+        prediction.forEach((pred, index) => {
+            const container = document.createElement("div");
+            container.classList.add("label-bar");
+
+            const labelText = document.createElement("div");
+            labelText.classList.add("label-text");
+            labelText.textContent = `${pred.className} (${(pred.probability*100).toFixed(1)}%)`;
+
+            const barContainer = document.createElement("div");
+            barContainer.classList.add("bar-container");
+
+            const bar = document.createElement("div");
+            bar.classList.add("bar");
+
+            barContainer.appendChild(bar);
+            container.appendChild(labelText);
+            container.appendChild(barContainer);
+            labelContainer.appendChild(container);
+
+            // 延遲動畫
+            setTimeout(() => {
+                bar.style.width = `${pred.probability*100}%`;
+            }, index * 150);
+        });
+    }
+
+    document.getElementById("image-upload").addEventListener("change", function(event){
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = document.getElementById("image-preview");
+            img.src = e.target.result;
+            img.classList.remove("uploaded");
+            setTimeout(() => img.classList.add("uploaded"), 50);
+
+            img.onload = function() {
+                predictImage(img);
+            }
+        }
+        reader.readAsDataURL(file);
+    });
+
+    loadModel();
+    </script>
+
+  </main>
 <footer style="margin-bottom: auto;text-align: center;">
     <p>此網站為chat gpt生成</p>
 </footer>
@@ -176,7 +178,12 @@ html, body {
 body {
     font-family: "Chiron GoRound TC", 'Times New Romen', sans-serif;
 }
-
+#content {
+    flex: 1; /* 撐滿剩餘空間 */
+    text-align: center;
+    padding: 50px;
+    background: #f0f4f7;
+}
 /* 2. header 直接貼齊頂端 */
 #page-header {
     text-align: center;
@@ -189,5 +196,14 @@ body {
     z-index: 10;        /* 避免被其他元素覆蓋 */
     margin: 0;
 }
-
+/* footer */
+#page-footer {
+    text-align: center;
+    padding: 15px 0;
+    background: linear-gradient(to right, #4e91fc, #6eb1fc);
+    color: white;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+    box-shadow: 0 -4px 10px rgba(0,0,0,0.2);
+}
 </style>
