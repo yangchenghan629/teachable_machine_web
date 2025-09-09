@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chiron+GoRound+TC:wght@200..900&display=swap" rel="stylesheet">
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teachable Machine 圖片辨識</title>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.9.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8.4/dist/teachablemachine-image.min.js"></script>
+<style>
+html, body, h1, h2, h3, h4, h5, h6, p, span, div, input, button {
+    font-family: "Chiron GoRound TC", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 400; /* 可改 200~900 */
+    font-style: normal;
+}
+
+body { text-align:center; padding:50px; background: #f0f4f7; }
+h1 { color:#2b2b2b; font-size:2rem; margin-bottom:20px; }
+
+input[type="file"] {
+    margin: 20px 0;
+    padding: 10px 20px;
+    border-radius: 25px;
+    border: none;
+    background: #4e91fc;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+input[type="file"]:hover { background: #3a74e8; }
+
+#image-preview {
+    max-width:300px;
+    max-height:300px;
+    margin:20px auto;
+    border-radius:15px;
+    border:4px solid #4e91fc;
+    padding:5px;
+    background:#fff;
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+#image-preview.uploaded {
+    transform: scale(1.05);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+#label-container {
+    margin-top: 30px;
+    max-width:400px;
+    margin-left:auto;
+    margin-right:auto;
+    text-align:left;
+}
+
+.label-bar {
+    display:flex;
+    align-items:center;
+    margin:10px 0;
+}
+
+.label-text {
+    width:100px;
+    font-weight:bold;
+    color:#2b2b2b;
+}
+
+.bar-container {
+    flex:1;
+    height:20px;
+    background:#e0e0e0;
+    border-radius:10px;
+    overflow:hidden;
+}
+
+.bar {
+    height:100%;
+    width:0%;
+    background: #4e91fc;
+    border-radius:10px;
+    transition: width 1s ease;
+}
+</style>
+</head>
+<body>
+  <header id="page-header">
+        <h1><b>人工智慧與科學 - 習題一</b></h1>
+        <p id="author-name" style="font-size: larger;">姓名: 楊承翰&emsp;學號: B13209015&emsp;系級: 大氣二</p>
+  </header>
+
+<input type="file" id="image-upload" accept="image/*">
+<div>
+    <img id="image-preview" src="" alt="Uploaded Image">
+</div>
+<div id="label-container"></div>
+
+<script>
+const URL = "./model/";
+let model, maxPredictions;
+
+async function loadModel() {
+    const modelURL = URL + "model.json";
+    const metadataURL = URL + "metadata.json";
+    model = await tmImage.load(modelURL, metadataURL);
+    maxPredictions = model.getTotalClasses();
+}
+
+async function predictImage(image) {
+    const prediction = await model.predict(image);
+    const labelContainer = document.getElementById("label-container");
+    labelContainer.innerHTML = "";
+
+    prediction.forEach((pred, index) => {
+        const container = document.createElement("div");
+        container.classList.add("label-bar");
+
+        const labelText = document.createElement("div");
+        labelText.classList.add("label-text");
+        labelText.textContent = `${pred.className} (${(pred.probability*100).toFixed(1)}%)`;
+
+        const barContainer = document.createElement("div");
+        barContainer.classList.add("bar-container");
+
+        const bar = document.createElement("div");
+        bar.classList.add("bar");
+
+        barContainer.appendChild(bar);
+        container.appendChild(labelText);
+        container.appendChild(barContainer);
+        labelContainer.appendChild(container);
+
+        // 延遲動畫
+        setTimeout(() => {
+            bar.style.width = `${pred.probability*100}%`;
+        }, index * 150);
+    });
+}
+
+document.getElementById("image-upload").addEventListener("change", function(event){
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = document.getElementById("image-preview");
+        img.src = e.target.result;
+        img.classList.remove("uploaded");
+        setTimeout(() => img.classList.add("uploaded"), 50);
+
+        img.onload = function() {
+            predictImage(img);
+        }
+    }
+    reader.readAsDataURL(file);
+});
+
+loadModel();
+</script>
+
+</body>
+</html>
+<style>
+/* 1. 移除 html 與 body 的預設 margin/padding */
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+body {
+    font-family: "Chiron GoRound TC", 'Times New Romen', sans-serif;
+}
+
+/* 2. header 直接貼齊頂端 */
+#page-header {
+    text-align: center;
+    background: linear-gradient(to right, #4e91fc, #6eb1fc);
+    color: white;
+    padding: 20px 0;
+    border-radius: 0 0 15px 15px; /* 只保留下方圓角 */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    position: relative; /* 確保浮層不影響 */
+    z-index: 10;        /* 避免被其他元素覆蓋 */
+    margin: 0;
+}
+
+</style>
